@@ -11,3 +11,8 @@ npm install
 ```
 npm start
 ```
+## 동영상
+
+
+https://github.com/who0803/wanted-pre-onboarding-frontend/assets/65334125/e3cfa7d6-3883-496d-bf0e-4b69d209ce59
+
