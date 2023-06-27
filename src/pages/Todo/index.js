@@ -3,12 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 function Todo() {
-  const [todos, setTodos] = useState([]);
-  const [newTodo, setNewTodo] = useState('');
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [modifiedTodo, setModifiedTodo] = useState('');
-  const [modifiedTodoId, setModifiedTodoId] = useState('');
-  const [modifiedTodoIsCompleted, setModifiedTodoIsCompleted] = useState(false);
+  const [todos, setTodos] = useState([]); 
+  const [newTodo, setNewTodo] = useState(''); 
+  const [isEditMode, setIsEditMode] = useState(false);  
+  const [modifiedTodo, setModifiedTodo] = useState(''); 
+  const [modifiedTodoId, setModifiedTodoId] = useState(''); 
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -42,13 +41,13 @@ function Todo() {
         }
       );
       setTodos([...todos, response.data]);
-      setNewTodo('');
+      setNewTodo(''); 
     } catch (error) {
       console.error('Error creating todo:', error);
     }
   };
 
-  const updateTodo = async (id, updatedTodo) => {
+  const updateTodo = async (id, updatedTodo) => { 
     try {
       const response = await axios.put(
         `https://www.pre-onboarding-selection-task.shop/todos/${id}`,
@@ -60,25 +59,21 @@ function Todo() {
           },
         }
       );
-      const updatedTodos = todos.map(todo => (todo.id === id ? response.data : todo));
+      const updatedTodos = todos.map(todo => (todo.id === id ? response.data : todo)); 
       setTodos(updatedTodos);
-      setIsEditMode(false);
-      setModifiedTodo('');
-      setModifiedTodoId('');
-      setModifiedTodoIsCompleted(false);
     } catch (error) {
       console.error('Error updating todo:', error);
     }
   };
 
-  const deleteTodo = async id => {
+  const deleteTodo = async id => {  
     try {
       await axios.delete(`https://www.pre-onboarding-selection-task.shop/todos/${id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('access_token')}`,
         },
       });
-      const updatedTodos = todos.filter(todo => todo.id !== id);
+      const updatedTodos = todos.filter(todo => todo.id !== id);  
       setTodos(updatedTodos);
     } catch (error) {
       console.error('Error deleting todo:', error);
@@ -91,34 +86,35 @@ function Todo() {
     await updateTodo(id, updatedTodo);
   };
 
-  const handleAddButtonClick = () => {
+  const handleAddButtonClick = () => {  
     createTodo();
   };
 
-  const handleModifyButtonClick = (id, todo, isCompleted) => {
-    setIsEditMode(true);
-    setModifiedTodoId(id);
+  const handleModifyButtonClick = (id, todo) => { 
+    setIsEditMode(true);    
+    setModifiedTodoId(id);  
     setModifiedTodo(todo);
-    setModifiedTodoIsCompleted(isCompleted);
   };
 
-  const handleSubmitClick = async () => {
+  const handleSubmitClick = async (isCompleted) => {
     if (modifiedTodo.trim() === '') {
       console.error('isCompleted should not be empty');
       return;
     }
     const updatedTodo = {
       todo: modifiedTodo,
-      isCompleted: modifiedTodoIsCompleted,
+      isCompleted,
     };
     await updateTodo(modifiedTodoId, updatedTodo);
+    setIsEditMode(false);
+    setModifiedTodo('');
+    setModifiedTodoId('');
   };
 
   const handleCancelButtonClick = () => {
     setIsEditMode(false);
     setModifiedTodo('');
     setModifiedTodoId('');
-    setModifiedTodoIsCompleted(false);
   };
 
   return (
@@ -140,15 +136,15 @@ function Todo() {
               <div>
                 <input
                   type="checkbox"
-                  checked={modifiedTodoIsCompleted}
-                  onChange={e => setModifiedTodoIsCompleted(e.target.checked)}
+                  checked={todo.isCompleted}
+                  onChange={e => handleCheckboxChange(todo.id, e.target.checked)}
                 />
                 <input
                   data-testid="modify-input"
                   value={modifiedTodo}
                   onChange={e => setModifiedTodo(e.target.value)}
                 />
-                <button data-testid="submit-button" onClick={handleSubmitClick}>
+                <button data-testid="submit-button" onClick={e => handleSubmitClick(todo.isCompleted)}>
                   제출
                 </button>
                 <button data-testid="cancel-button" onClick={handleCancelButtonClick}>
@@ -167,7 +163,7 @@ function Todo() {
                 </label>
                 <button
                   data-testid="modify-button"
-                  onClick={() => handleModifyButtonClick(todo.id, todo.todo, todo.isCompleted)}
+                  onClick={() => handleModifyButtonClick(todo.id, todo.todo)}
                 >
                   수정
                 </button>
