@@ -1,37 +1,29 @@
 import { useEffect, useState } from 'react';
 import {Form} from '../../components'
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import {signUp} from '../../apis';
+import { inputValidationRegex } from '../../utils/validate';
 
 function Signup() {
   const [value, setValue] = useState(['', '']);
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(true);
-  const emailRegex = /@/;
-  const passwordRegex = /^.{8,}$/;
   const navigate = useNavigate();
 
-  const isDisabled = () => emailRegex.test(value[0]) && passwordRegex.test(value[1]);
+  const isDisabled = () => inputValidationRegex.email.test(value[0]) && inputValidationRegex.password.test(value[1]);
   const onEmailChange = (e) => setValue((cur) => [e.target.value, cur[1]]);
   const onPasswordChange = (e) => setValue((cur) => [cur[0], e.target.value]);
   const onSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const response = await axios.post('https://www.pre-onboarding-selection-task.shop/auth/signup', {
-        email: value[0],
-        password: value[1],
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (response.status === 201) {
-        setErrorMessage('')
-        navigate("/signin")
-      }
+
+    const response = await signUp(value[0], value[1]);
+    if (response.status === 201) {
+      setErrorMessage('')
+      navigate("/signin")
     }
-    catch(error) {
-      setErrorMessage(error.response.data.message)
+    else {
+      if (response.response) setErrorMessage(response.response.data.message)
+      else console.error('Error signup:', response);
     }
   }
 

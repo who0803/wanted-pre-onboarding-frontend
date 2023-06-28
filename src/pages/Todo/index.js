@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import {getTodos, createTodo, updateTodo, deleteTodo} from '../../apis'
 
 function Todo() {
   const [todos, setTodos] = useState([]); 
@@ -11,83 +11,28 @@ function Todo() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!localStorage.getItem('access_token')) navigate("/signin")
-    getTodos();
+    if (!localStorage.getItem('access_token')) navigate("/signin");
+    else {
+      const getData = async () => {
+        const response = await getTodos();
+        setTodos(response.data);
+      }
+      getData()
+    }
   }, []);
-
-  const getTodos = async () => {
-    try {
-      const response = await axios.get('https://www.pre-onboarding-selection-task.shop/todos', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-        },
-      });
-      setTodos(response.data);
-    } catch (error) {
-      console.error('Error fetching todos:', error);
-    }
-  };
-
-  const createTodo = async () => {
-    try {
-      const response = await axios.post(
-        'https://www.pre-onboarding-selection-task.shop/todos',
-        { todo: newTodo },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      setTodos([...todos, response.data]);
-      setNewTodo(''); 
-    } catch (error) {
-      console.error('Error creating todo:', error);
-    }
-  };
-
-  const updateTodo = async (id, updatedTodo) => { 
-    try {
-      const response = await axios.put(
-        `https://www.pre-onboarding-selection-task.shop/todos/${id}`,
-        updatedTodo,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      const updatedTodos = todos.map(todo => (todo.id === id ? response.data : todo)); 
-      setTodos(updatedTodos);
-    } catch (error) {
-      console.error('Error updating todo:', error);
-    }
-  };
-
-  const deleteTodo = async id => {  
-    try {
-      await axios.delete(`https://www.pre-onboarding-selection-task.shop/todos/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-        },
-      });
-      const updatedTodos = todos.filter(todo => todo.id !== id);  
-      setTodos(updatedTodos);
-    } catch (error) {
-      console.error('Error deleting todo:', error);
-    }
-  };
 
   const handleCheckboxChange = async (id, isChecked) => {
     const updatedTodo = todos.find(todo => todo.id === id);
     updatedTodo.isCompleted = isChecked;
-    await updateTodo(id, updatedTodo);
+    const response = await updateTodo(id, updatedTodo);
+    const updatedTodos = todos.map(todo => (todo.id === modifiedTodoId ? response.data : todo)); 
+    setTodos(updatedTodos);
   };
 
-  const handleAddButtonClick = () => {  
-    createTodo();
+  const handleAddButtonClick = async () => {  
+    const response = await createTodo(newTodo);
+    setTodos([...todos, response.data]);
+    setNewTodo(''); 
   };
 
   const handleModifyButtonClick = (id, todo) => { 
@@ -105,7 +50,9 @@ function Todo() {
       todo: modifiedTodo,
       isCompleted,
     };
-    await updateTodo(modifiedTodoId, updatedTodo);
+    const response = await updateTodo(modifiedTodoId, updatedTodo);
+    const updatedTodos = todos.map(todo => (todo.id === modifiedTodoId ? response.data : todo)); 
+    setTodos(updatedTodos);
     setIsEditMode(false);
     setModifiedTodo('');
     setModifiedTodoId('');
@@ -115,6 +62,13 @@ function Todo() {
     setIsEditMode(false);
     setModifiedTodo('');
     setModifiedTodoId('');
+  };
+ 
+  const handleDeleteButtonClick = async (id) => {
+    await deleteTodo(id);
+    console.log(id)
+    const updatedTodos = todos.filter(todo => todo.id !== id);  
+    setTodos(updatedTodos);
   };
 
   return (
@@ -130,7 +84,7 @@ function Todo() {
         </button>
       </div>
       <ul>
-        {todos.map(todo => (
+        {todos?.map(todo => (
           <li key={todo.id}>
             {isEditMode && modifiedTodoId === todo.id ? (
               <div>
@@ -167,7 +121,7 @@ function Todo() {
                 >
                   수정
                 </button>
-                <button data-testid="delete-button" onClick={() => deleteTodo(todo.id)}>
+                <button data-testid="delete-button" onClick={() => handleDeleteButtonClick(todo.id)}>
                   삭제
                 </button>
               </div>
