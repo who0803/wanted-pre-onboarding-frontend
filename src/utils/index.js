@@ -1,0 +1,1 @@
+import { inputValidationRegex } from './validate';
